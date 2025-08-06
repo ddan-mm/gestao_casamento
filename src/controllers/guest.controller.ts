@@ -78,11 +78,11 @@ router.get('/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const guest = await guestService.findGuestById(id);
-    if (!guest) {
-      return res.status(404).json({ error: 'Convidado não encontrado' });
-    }
     return res.json(guest);
   } catch (err: any) {
+    if (err.message === 'Convidado não encontrado') {
+      return res.status(404).json({ error: err.message });
+    }
     console.error(err);
     return res
       .status(500)

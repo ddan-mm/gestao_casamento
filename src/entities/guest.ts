@@ -43,4 +43,6 @@ export class GuestEntity {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  qrCode?: string;
 }

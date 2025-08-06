@@ -67,7 +67,26 @@ export class GuestService {
   }
 
   async findGuestById(id: string) {
-    return this.guestRepo.findOneBy({ id });
+    const guest = await this.guestRepo.findOneBy({ id });
+
+    if (!guest) {
+      throw new Error('Convidado não encontrado');
+    }
+
+    if (guest?.status === GuestStatus.CONFIRMED) {
+      const payload = {
+        id: guest.id,
+        title: guest.title,
+        names: guest.names,
+        quantity: guest.quantity,
+        status: guest.status,
+      };
+
+      const qrCode = await QRCode.toDataURL(JSON.stringify(payload));
+      return { ...guest, qrCode };
+    }
+
+    return guest;
   }
 
   async respondToInvite({ id, confirmed }: RespondToInviteDTO) {
