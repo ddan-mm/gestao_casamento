@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
-export class CreateGuest1690000000000 implements MigrationInterface {
+export class CreateGuest1754427332898 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
       new Table({
@@ -33,6 +33,11 @@ export class CreateGuest1690000000000 implements MigrationInterface {
           },
           {
             name: 'family',
+            type: 'boolean',
+            default: false,
+          },
+          {
+            name: 'confirmed',
             type: 'boolean',
             default: false,
           },

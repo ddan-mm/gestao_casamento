@@ -16,6 +16,7 @@ router.post('/', authMiddleware, async (req, res) => {
     const guest = await guestService.createGuest({ type, names, title });
     return res.status(201).json(guest);
   } catch (err) {
+    console.error('Erro ao criar convidado:', err);
     return res.status(500).json({ error: 'Erro ao criar convidado' });
   }
 });
