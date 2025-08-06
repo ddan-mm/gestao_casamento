@@ -27,6 +27,10 @@ router.put('/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
   const data = req.body;
 
+  if (data.names && (!Array.isArray(data.names) || data.names.length === 0)) {
+    return res.status(400).json({ error: 'Names must be a non-empty array' });
+  }
+
   try {
     const updatedGuest = await guestService.updateGuest(id, data);
     return res.json(updatedGuest);
@@ -38,6 +42,23 @@ router.put('/:id', authMiddleware, async (req, res) => {
     return res
       .status(500)
       .json({ error: 'Erro ao atualizar convidado', message: err.message });
+  }
+});
+
+router.delete('/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await guestService.deleteGuest(id);
+    return res.json(result);
+  } catch (err: any) {
+    if (err.message === 'Convidado não encontrado') {
+      return res.status(404).json({ error: err.message });
+    }
+    console.error(err);
+    return res
+      .status(500)
+      .json({ error: 'Erro ao remover convidado', message: err.message });
   }
 });
 

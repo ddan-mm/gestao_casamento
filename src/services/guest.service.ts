@@ -57,6 +57,15 @@ export class GuestService {
     return guest;
   }
 
+  async deleteGuest(id: string) {
+    const guest = await this.guestRepo.findOneBy({ id });
+    if (!guest) {
+      throw new Error('Convidado não encontrado');
+    }
+    await this.guestRepo.remove(guest);
+    return { message: 'Convidado removido com sucesso' };
+  }
+
   async findGuestById(id: string) {
     return this.guestRepo.findOneBy({ id });
   }
