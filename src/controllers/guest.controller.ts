@@ -6,14 +6,14 @@ const router = Router();
 const guestService = new GuestService();
 
 router.post('/', authMiddleware, async (req, res) => {
-  const { type, names, title } = req.body;
+  const { names, title } = req.body;
 
   if (!Array.isArray(names) || names.length === 0) {
     return res.status(400).json({ error: 'Names must be a non-empty array' });
   }
 
   try {
-    const guest = await guestService.createGuest({ type, names, title });
+    const guest = await guestService.createGuest({ names, title });
     return res.status(201).json(guest);
   } catch (err: any) {
     console.error('Erro ao criar convidado:', err);

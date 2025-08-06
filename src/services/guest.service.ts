@@ -4,7 +4,6 @@ import { GuestStatus, GuestEntity, GuestType } from '../entities/guest';
 import QRCode from 'qrcode';
 
 interface CreateGuestDTO {
-  type: GuestType;
   names: string[];
   title: string;
 }
@@ -18,11 +17,11 @@ export class GuestService {
   private guestRepo = AppDataSource.getRepository(GuestEntity);
 
   async createGuest(data: CreateGuestDTO) {
-    const { type, names, title } = data;
+    const { names, title } = data;
 
     const guest = this.guestRepo.create({
       title,
-      type,
+      type: names.length > 1 ? GuestType.FAMILY : GuestType.INDIVIDUAL,
       names,
       quantity: names.length,
       status: GuestStatus.PENDING,
@@ -48,7 +47,9 @@ export class GuestService {
     Object.assign(guest, data);
     await this.guestRepo.update(guest.id, {
       ...(data.title && { title: data.title }),
-      ...(data.type && { type: data.type }),
+      ...(data.names && {
+        type: data.names.length > 1 ? GuestType.FAMILY : GuestType.INDIVIDUAL,
+      }),
       ...(data.names && { names: data.names }),
       ...(data.names && { quantity: data.names.length }),
       ...(data.status && { status: data.status }),
