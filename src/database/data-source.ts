@@ -5,8 +5,9 @@ import { GuestEntity } from '../entities/guest';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
-  url: process.env.DATABASE_URL, // coloque aqui sua string do Supabase
-  synchronize: true, // só para dev, em produção configure migrations
+  url: process.env.DATABASE_URL,
+  synchronize: false,
   logging: false,
   entities: [GuestEntity],
+  migrations: ['src/migrations/**/*.ts'], // ajuste o caminho se necessário
 });

@@ -54,13 +54,11 @@ router.get('/', authMiddleware, async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
-  console.log('Buscando convidado com ID:', id);
   try {
     const guest = await guestService.findGuestById(id);
     if (!guest) {
       return res.status(404).json({ error: 'Convidado não encontrado' });
     }
-    console.log('Convidado encontrado:', guest);
     return res.json(guest);
   } catch (err) {
     console.error(err);
