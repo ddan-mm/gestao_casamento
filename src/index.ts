@@ -17,7 +17,7 @@ AppDataSource.initialize()
   });
 
 const app = express();
-const PORT = 3333;
+const PORT = process.env.PORT || 2319;
 
 app.use(cors());
 app.use(express.json());

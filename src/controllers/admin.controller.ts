@@ -7,13 +7,18 @@ import { authMiddleware } from '../middlewares/auth';
 const router = Router();
 
 // Dados fixos do admin
-const ADMIN_EMAIL = 'admin@casamento.com';
-const ADMIN_PASSWORD = 'senha123';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 router.post('/login', (req, res) => {
   const { email, password } = req.body;
 
-  if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
+  if (
+    email !== ADMIN_EMAIL ||
+    password !== ADMIN_PASSWORD ||
+    !email ||
+    !password
+  ) {
     return res.status(401).json({ error: 'Credenciais inválidas' });
   }
 
