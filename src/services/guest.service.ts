@@ -1,5 +1,6 @@
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { AppDataSource } from '../database/data-source';
-import { GuestEntity, GuestType } from '../entities/guest';
+import { GuestStatus, GuestEntity, GuestType } from '../entities/guest';
 import QRCode from 'qrcode';
 
 interface CreateGuestDTO {
@@ -9,8 +10,8 @@ interface CreateGuestDTO {
 }
 
 interface RespondToInviteDTO {
-  uuid: string;
-  confirmed: boolean;
+  id: string;
+  confirmed: GuestStatus;
 }
 
 export class GuestService {
@@ -24,6 +25,7 @@ export class GuestService {
       type,
       names,
       quantity: names.length,
+      status: GuestStatus.PENDING,
     });
 
     await this.guestRepo.save(guest);
@@ -38,27 +40,59 @@ export class GuestService {
     });
   }
 
+  async updateGuest(id: string, data: QueryDeepPartialEntity<GuestEntity>) {
+    const guest = await this.guestRepo.findOneBy({ id });
+    if (!guest) {
+      throw new Error('Convidado não encontrado');
+    }
+    Object.assign(guest, data);
+    await this.guestRepo.update(guest.id, {
+      ...(data.title && { title: data.title }),
+      ...(data.type && { type: data.type }),
+      ...(data.names && { names: data.names }),
+      ...(data.names && { quantity: data.names.length }),
+      ...(data.status && { status: data.status }),
+      updatedAt: new Date(),
+    });
+    return guest;
+  }
+
   async findGuestById(id: string) {
     return this.guestRepo.findOneBy({ id });
   }
 
-  async respondToInvite({ uuid, confirmed }: RespondToInviteDTO) {
-    const guest = await this.guestRepo.findOneBy({ id: uuid });
+  async respondToInvite({ id, confirmed }: RespondToInviteDTO) {
+    const guest = await this.guestRepo.findOneBy({ id });
 
     if (!guest) {
       throw new Error('Convite não encontrado');
     }
 
-    guest.confirmed = confirmed;
-    await this.guestRepo.save(guest);
+    if (guest.status !== GuestStatus.PENDING) {
+      return { message: 'Convite já foi respondido anteriormente' };
+    }
 
-    if (!confirmed) return { message: 'Convite recusado com sucesso' };
+    if (
+      confirmed !== GuestStatus.CONFIRMED &&
+      confirmed !== GuestStatus.DECLINED
+    ) {
+      throw new Error('Status de confirmação inválido');
+    }
+
+    await this.guestRepo.save({
+      ...guest,
+      status: confirmed,
+    });
+
+    if (confirmed === GuestStatus.DECLINED)
+      return { message: 'Convite recusado com sucesso' };
 
     const payload = {
       id: guest.id,
       title: guest.title,
       names: guest.names,
       quantity: guest.quantity,
+      status: confirmed,
     };
 
     const qrCode = await QRCode.toDataURL(JSON.stringify(payload));
@@ -67,5 +101,26 @@ export class GuestService {
       message: 'Convite confirmado com sucesso',
       qrCode,
     };
+  }
+
+  async confirmPresentAtEvent(id: string) {
+    const guest = await this.guestRepo.findOneBy({ id });
+
+    if (!guest) {
+      throw new Error('Convite não encontrado');
+    }
+
+    if (guest.status === GuestStatus.PRESENT_AT_EVENT) {
+      throw new Error('Presença já confirmada anteriormente');
+    }
+
+    if (guest.status !== GuestStatus.CONFIRMED) {
+      throw new Error('Convite não confirmado para o evento');
+    }
+
+    guest.status = GuestStatus.PRESENT_AT_EVENT;
+    await this.guestRepo.save(guest);
+
+    return { message: 'Presença confirmada com sucesso' };
   }
 }

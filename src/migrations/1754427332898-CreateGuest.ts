@@ -37,9 +37,9 @@ export class CreateGuest1754427332898 implements MigrationInterface {
             default: false,
           },
           {
-            name: 'confirmed',
-            type: 'boolean',
-            default: false,
+            name: 'status',
+            type: 'int4',
+            default: 1,
           },
           {
             name: 'createdAt',

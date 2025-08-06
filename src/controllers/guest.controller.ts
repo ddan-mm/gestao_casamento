@@ -15,31 +15,29 @@ router.post('/', authMiddleware, async (req, res) => {
   try {
     const guest = await guestService.createGuest({ type, names, title });
     return res.status(201).json(guest);
-  } catch (err) {
+  } catch (err: any) {
     console.error('Erro ao criar convidado:', err);
-    return res.status(500).json({ error: 'Erro ao criar convidado' });
+    return res
+      .status(500)
+      .json({ error: 'Erro ao criar convidado', message: err.message });
   }
 });
 
-router.post('/respond/:uuid', async (req, res) => {
-  const { uuid } = req.params;
-  const { confirmed } = req.body;
-
-  if (typeof confirmed !== 'boolean') {
-    return res
-      .status(400)
-      .json({ message: 'Campo "confirmed" deve ser booleano' });
-  }
+router.put('/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  const data = req.body;
 
   try {
-    const result = await guestService.respondToInvite({ uuid, confirmed });
-    return res.json(result);
+    const updatedGuest = await guestService.updateGuest(id, data);
+    return res.json(updatedGuest);
   } catch (err: any) {
-    if (err.message === 'Convite não encontrado') {
-      return res.status(404).json({ message: err.message });
+    if (err.message === 'Convidado não encontrado') {
+      return res.status(404).json({ error: err.message });
     }
     console.error(err);
-    return res.status(500).json({ message: 'Erro interno no servidor' });
+    return res
+      .status(500)
+      .json({ error: 'Erro ao atualizar convidado', message: err.message });
   }
 });
 
@@ -47,9 +45,11 @@ router.get('/', authMiddleware, async (req, res) => {
   try {
     const guests = await guestService.listGuests();
     return res.json(guests);
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
-    return res.status(500).json({ error: 'Erro ao listar convidados' });
+    return res
+      .status(500)
+      .json({ error: 'Erro ao listar convidados', message: err.message });
   }
 });
 
@@ -61,9 +61,70 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Convidado não encontrado' });
     }
     return res.json(guest);
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
-    return res.status(500).json({ error: 'Erro ao buscar convidado' });
+    return res
+      .status(500)
+      .json({ error: 'Erro ao buscar convidado', message: err.message });
+  }
+});
+
+router.post('/respond/:id', async (req, res) => {
+  const { id } = req.params;
+  const { confirmed } = req.body;
+
+  if (typeof confirmed !== 'number') {
+    return res
+      .status(400)
+      .json({ message: 'Campo "confirmed" deve ser um número' });
+  }
+
+  try {
+    const result = await guestService.respondToInvite({ id, confirmed });
+    return res.json(result);
+  } catch (err: any) {
+    if (err.message === 'Convite não encontrado') {
+      return res.status(404).json({ message: err.message });
+    }
+    if (err.message === 'Status de confirmação inválido') {
+      return res.status(400).json({ message: err.message });
+    }
+    if (err.message === 'Convite já foi respondido anteriormente') {
+      return res.status(400).json({ message: err.message });
+    }
+
+    console.error(err);
+    return res
+      .status(500)
+      .json({ error: 'Erro ao responder convite', message: err.message });
+  }
+});
+
+router.post('/confirm-present/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await guestService.confirmPresentAtEvent(id);
+    return res.json({
+      message: 'Confirmação de presença registrada com sucesso',
+    });
+  } catch (err: any) {
+    if (err.message === 'Convite não encontrado') {
+      return res.status(404).json({ error: err.message });
+    }
+
+    if (err.message === 'Presença já confirmada anteriormente') {
+      return res.status(400).json({ error: err.message });
+    }
+
+    if (err.message === 'Convite não confirmado para o evento') {
+      return res.status(400).json({ error: err.message });
+    }
+
+    console.error(err);
+    return res
+      .status(500)
+      .json({ error: 'Erro ao confirmar presença', message: err.message });
   }
 });
 

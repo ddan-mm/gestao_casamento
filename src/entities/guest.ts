@@ -11,6 +11,13 @@ export enum GuestType {
   FAMILY = 2,
 }
 
+export enum GuestStatus {
+  PENDING = 1,
+  CONFIRMED = 2,
+  DECLINED = 3,
+  PRESENT_AT_EVENT = 4,
+}
+
 @Entity('guests')
 export class GuestEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -28,8 +35,8 @@ export class GuestEntity {
   @Column()
   quantity: number;
 
-  @Column({ default: false })
-  confirmed: boolean;
+  @Column({ default: GuestStatus.PENDING })
+  status: GuestStatus;
 
   @CreateDateColumn()
   createdAt: Date;
