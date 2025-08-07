@@ -127,7 +127,7 @@ router.post('/confirm-present/:id', async (req, res) => {
   try {
     await guestService.confirmPresentAtEvent(id);
     return res.json({
-      message: 'Confirmação de presença registrada com sucesso',
+      message: 'QR Code válido. Presença confirmada com sucesso',
     });
   } catch (err: any) {
     if (err.message === 'QR Code inválido. Convite não encontrado') {
@@ -149,7 +149,10 @@ router.post('/confirm-present/:id', async (req, res) => {
     console.error(err);
     return res
       .status(500)
-      .json({ error: 'Erro ao confirmar presença', message: err.message });
+      .json({
+        error: 'Erro ao confirmar presença. Tente novamente',
+        message: err.message,
+      });
   }
 });
 

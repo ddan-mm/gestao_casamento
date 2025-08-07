@@ -150,6 +150,6 @@ export class GuestService {
     guest.status = GuestStatus.PRESENT_AT_EVENT;
     await this.guestRepo.save(guest);
 
-    return { message: 'Presença confirmada com sucesso' };
+    return { message: 'QR Code válido. Presença confirmada com sucesso' };
   }
 }
