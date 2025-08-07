@@ -130,15 +130,19 @@ router.post('/confirm-present/:id', async (req, res) => {
       message: 'Confirmação de presença registrada com sucesso',
     });
   } catch (err: any) {
-    if (err.message === 'Convite não encontrado') {
+    if (err.message === 'QR Code inválido. Convite não encontrado') {
       return res.status(404).json({ error: err.message });
     }
 
-    if (err.message === 'Presença já confirmada anteriormente') {
+    if (
+      err.message === 'QR Code inválido. Presença já confirmada anteriormente'
+    ) {
       return res.status(400).json({ error: err.message });
     }
 
-    if (err.message === 'Convite não confirmado para o evento') {
+    if (
+      err.message === 'QR Code inválido. Convite não confirmado para o evento'
+    ) {
       return res.status(400).json({ error: err.message });
     }
 

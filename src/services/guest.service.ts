@@ -136,15 +136,15 @@ export class GuestService {
     const guest = await this.guestRepo.findOneBy({ id });
 
     if (!guest) {
-      throw new Error('Convite não encontrado');
+      throw new Error('QR Code inválido. Convite não encontrado');
     }
 
     if (guest.status === GuestStatus.PRESENT_AT_EVENT) {
-      throw new Error('Presença já confirmada anteriormente');
+      throw new Error('QR Code inválido. Presença já confirmada anteriormente');
     }
 
     if (guest.status !== GuestStatus.CONFIRMED) {
-      throw new Error('Convite não confirmado para o evento');
+      throw new Error('QR Code inválido. Convite não confirmado para o evento');
     }
 
     guest.status = GuestStatus.PRESENT_AT_EVENT;
