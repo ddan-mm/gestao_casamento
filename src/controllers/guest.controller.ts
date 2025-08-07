@@ -134,9 +134,7 @@ router.post('/confirm-present/:id', async (req, res) => {
       return res.status(404).json({ error: err.message });
     }
 
-    if (
-      err.message === 'QR Code inválido. Presença já confirmada anteriormente'
-    ) {
+    if (err.message === 'QR Code inválido. Convite já foi utilizado') {
       return res.status(400).json({ error: err.message });
     }
 
@@ -147,12 +145,10 @@ router.post('/confirm-present/:id', async (req, res) => {
     }
 
     console.error(err);
-    return res
-      .status(500)
-      .json({
-        error: 'Erro ao confirmar presença. Tente novamente',
-        message: err.message,
-      });
+    return res.status(500).json({
+      error: 'Erro ao confirmar presença. Tente novamente',
+      message: err.message,
+    });
   }
 });
 

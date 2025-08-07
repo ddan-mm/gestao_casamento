@@ -140,7 +140,7 @@ export class GuestService {
     }
 
     if (guest.status === GuestStatus.PRESENT_AT_EVENT) {
-      throw new Error('QR Code inválido. Presença já confirmada anteriormente');
+      throw new Error('QR Code inválido. Convite já foi utilizado');
     }
 
     if (guest.status !== GuestStatus.CONFIRMED) {
