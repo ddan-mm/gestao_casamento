@@ -32,14 +32,14 @@ export class CreateGuest1754427332898 implements MigrationInterface {
             default: 1,
           },
           {
-            name: 'family',
-            type: 'boolean',
-            default: false,
-          },
-          {
             name: 'status',
             type: 'int4',
             default: 1,
+          },
+          {
+            name: 'cellphone',
+            type: 'varchar',
+            isNullable: true,
           },
           {
             name: 'createdAt',

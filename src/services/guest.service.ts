@@ -6,6 +6,8 @@ import QRCode from 'qrcode';
 interface CreateGuestDTO {
   names: string[];
   title: string;
+  status?: GuestStatus;
+  cellphone?: string;
 }
 
 interface RespondToInviteDTO {
@@ -17,14 +19,15 @@ export class GuestService {
   private guestRepo = AppDataSource.getRepository(GuestEntity);
 
   async createGuest(data: CreateGuestDTO) {
-    const { names, title } = data;
+    const { names, title, status, cellphone } = data;
 
     const guest = this.guestRepo.create({
-      title,
+      title: title || `Família ${names[0]}`,
       type: names.length > 1 ? GuestType.FAMILY : GuestType.INDIVIDUAL,
       names,
       quantity: names.length,
-      status: GuestStatus.PENDING,
+      status: status || GuestStatus.PENDING,
+      cellphone,
     });
 
     await this.guestRepo.save(guest);
@@ -47,12 +50,13 @@ export class GuestService {
     Object.assign(guest, data);
     await this.guestRepo.update(guest.id, {
       ...(data.title && { title: data.title }),
-      ...(data.names && {
-        type: data.names.length > 1 ? GuestType.FAMILY : GuestType.INDIVIDUAL,
-      }),
       ...(data.names && { names: data.names }),
       ...(data.names && { quantity: data.names.length }),
       ...(data.status && { status: data.status }),
+      ...(data.cellphone && { cellphone: data.cellphone }),
+      ...(data.names && {
+        type: data.names.length > 1 ? GuestType.FAMILY : GuestType.INDIVIDUAL,
+      }),
       updatedAt: new Date(),
     });
     return guest;
@@ -78,9 +82,13 @@ export class GuestService {
       const payload = {
         id: guest.id,
         title: guest.title,
+        type: guest.type,
         names: guest.names,
         quantity: guest.quantity,
         status: guest.status,
+        cellphone: guest.cellphone,
+        createdAt: guest.createdAt,
+        updatedAt: guest.updatedAt,
       };
 
       const qrCode = await QRCode.toDataURL(JSON.stringify(payload));
@@ -119,9 +127,13 @@ export class GuestService {
     const payload = {
       id: guest.id,
       title: guest.title,
+      type: guest.type,
       names: guest.names,
       quantity: guest.quantity,
-      status: confirmed,
+      status: guest.status,
+      cellphone: guest.cellphone,
+      createdAt: guest.createdAt,
+      updatedAt: guest.updatedAt,
     };
 
     const qrCode = await QRCode.toDataURL(JSON.stringify(payload));

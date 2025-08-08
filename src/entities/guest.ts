@@ -38,6 +38,9 @@ export class GuestEntity {
   @Column({ default: GuestStatus.PENDING })
   status: GuestStatus;
 
+  @Column({ nullable: true })
+  cellphone: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
