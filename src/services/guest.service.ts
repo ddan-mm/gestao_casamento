@@ -2,6 +2,7 @@ import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity
 import { AppDataSource } from '../database/data-source';
 import { GuestStatus, GuestEntity, GuestType } from '../entities/guest';
 import QRCode from 'qrcode';
+import crypto from 'crypto';
 
 interface CreateGuestDTO {
   names: string[];
@@ -17,6 +18,17 @@ interface RespondToInviteDTO {
 
 export class GuestService {
   private guestRepo = AppDataSource.getRepository(GuestEntity);
+
+  private signPayload(payload: object) {
+    const secret = process.env.QR_SECRET_KEY!;
+    const data = JSON.stringify(payload);
+    const signature = crypto
+      .createHmac('sha256', secret)
+      .update(data)
+      .digest('hex');
+
+    return { ...payload, signature };
+  }
 
   async createGuest(data: CreateGuestDTO) {
     const { names, title, status, cellphone } = data;
@@ -91,7 +103,15 @@ export class GuestService {
         updatedAt: guest.updatedAt,
       };
 
-      const qrCode = await QRCode.toDataURL(JSON.stringify(payload));
+      const secret = process.env.QR_SECRET_KEY!;
+      const signature = crypto
+        .createHmac('sha256', secret)
+        .update(JSON.stringify(payload))
+        .digest('hex');
+
+      const qrData = { payload, signature };
+
+      const qrCode = await QRCode.toDataURL(JSON.stringify(qrData));
       return { ...guest, qrCode };
     }
 
@@ -136,7 +156,15 @@ export class GuestService {
       updatedAt: guest.updatedAt,
     };
 
-    const qrCode = await QRCode.toDataURL(JSON.stringify(payload));
+    const secret = process.env.QR_SECRET_KEY!;
+    const signature = crypto
+      .createHmac('sha256', secret)
+      .update(JSON.stringify(payload))
+      .digest('hex');
+
+    const qrData = { payload, signature };
+
+    const qrCode = await QRCode.toDataURL(JSON.stringify(qrData));
 
     return {
       message: 'Convite confirmado com sucesso',
