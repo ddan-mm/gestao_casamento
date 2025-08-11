@@ -94,7 +94,7 @@ export class GuestService {
 
       const payloadString = JSON.stringify(payload);
       const payloadBase64 = Buffer.from(payloadString).toString('base64url');
-      const inviteUrl = `${inviteBaseUrl}?/${payloadBase64}`;
+      const inviteUrl = `${inviteBaseUrl}?payload=${payloadBase64}`;
 
       const qrCode = await QRCode.toDataURL(inviteUrl);
       return { ...guest, qrCode };
@@ -143,7 +143,7 @@ export class GuestService {
 
     const payloadString = JSON.stringify(payload);
     const payloadBase64 = Buffer.from(payloadString).toString('base64url');
-    const inviteUrl = `${inviteBaseUrl}?/${payloadBase64}`;
+    const inviteUrl = `${inviteBaseUrl}?payload=${payloadBase64}`;
 
     const qrCode = await QRCode.toDataURL(inviteUrl);
 
