@@ -13,7 +13,7 @@ interface CreateGuestDTO {
 interface RespondToInviteDTO {
   id: string;
   confirmed: GuestStatus;
-  inviteUrl?: string;
+  inviteBaseUrl: string;
 }
 
 export class GuestService {
@@ -72,7 +72,7 @@ export class GuestService {
     return { message: 'Convidado removido com sucesso' };
   }
 
-  async findGuestById(id: string, inviteUrl?: string) {
+  async findGuestById(id: string, inviteBaseUrl: string) {
     const guest = await this.guestRepo.findOneBy({ id });
 
     if (!guest) {
@@ -81,7 +81,6 @@ export class GuestService {
 
     if (guest?.status === GuestStatus.CONFIRMED) {
       const payload = {
-        ...(inviteUrl && { inviteUrl }),
         id: guest.id,
         title: guest.title,
         type: guest.type,
@@ -93,14 +92,18 @@ export class GuestService {
         updatedAt: guest.updatedAt,
       };
 
-      const qrCode = await QRCode.toDataURL(JSON.stringify(payload));
+      const payloadString = JSON.stringify(payload);
+      const payloadBase64 = Buffer.from(payloadString).toString('base64url');
+      const inviteUrl = `${inviteBaseUrl}?/${payloadBase64}`;
+
+      const qrCode = await QRCode.toDataURL(inviteUrl);
       return { ...guest, qrCode };
     }
 
     return guest;
   }
 
-  async respondToInvite({ id, confirmed, inviteUrl }: RespondToInviteDTO) {
+  async respondToInvite({ id, confirmed, inviteBaseUrl }: RespondToInviteDTO) {
     const guest = await this.guestRepo.findOneBy({ id });
 
     if (!guest) {
@@ -127,7 +130,6 @@ export class GuestService {
       return { message: 'Convite recusado com sucesso' };
 
     const payload = {
-      ...(inviteUrl && { inviteUrl }),
       id: guest.id,
       title: guest.title,
       type: guest.type,
@@ -139,7 +141,11 @@ export class GuestService {
       updatedAt: guest.updatedAt,
     };
 
-    const qrCode = await QRCode.toDataURL(JSON.stringify(payload));
+    const payloadString = JSON.stringify(payload);
+    const payloadBase64 = Buffer.from(payloadString).toString('base64url');
+    const inviteUrl = `${inviteBaseUrl}?/${payloadBase64}`;
+
+    const qrCode = await QRCode.toDataURL(inviteUrl);
 
     return {
       message: 'Convite confirmado com sucesso',

@@ -81,7 +81,7 @@ router.get('/', authMiddleware, async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
-  const { inviteUrl } = req.query as { inviteUrl?: string };
+  const { inviteUrl } = req.query as { inviteUrl: string };
   try {
     const guest = await guestService.findGuestById(id, inviteUrl);
     return res.json(guest);
@@ -110,7 +110,7 @@ router.post('/respond/:id', async (req, res) => {
     const result = await guestService.respondToInvite({
       id,
       confirmed,
-      inviteUrl,
+      inviteBaseUrl: inviteUrl,
     });
     return res.json(result);
   } catch (err: any) {
