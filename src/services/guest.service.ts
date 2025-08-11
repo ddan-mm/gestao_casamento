@@ -2,7 +2,6 @@ import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity
 import { AppDataSource } from '../database/data-source';
 import { GuestStatus, GuestEntity, GuestType } from '../entities/guest';
 import QRCode from 'qrcode';
-import crypto from 'crypto';
 
 interface CreateGuestDTO {
   names: string[];
@@ -14,21 +13,11 @@ interface CreateGuestDTO {
 interface RespondToInviteDTO {
   id: string;
   confirmed: GuestStatus;
+  inviteUrl?: string;
 }
 
 export class GuestService {
   private guestRepo = AppDataSource.getRepository(GuestEntity);
-
-  private signPayload(payload: object) {
-    const secret = process.env.QR_SECRET_KEY!;
-    const data = JSON.stringify(payload);
-    const signature = crypto
-      .createHmac('sha256', secret)
-      .update(data)
-      .digest('hex');
-
-    return { ...payload, signature };
-  }
 
   async createGuest(data: CreateGuestDTO) {
     const { names, title, status, cellphone } = data;
@@ -83,7 +72,7 @@ export class GuestService {
     return { message: 'Convidado removido com sucesso' };
   }
 
-  async findGuestById(id: string) {
+  async findGuestById(id: string, inviteUrl?: string) {
     const guest = await this.guestRepo.findOneBy({ id });
 
     if (!guest) {
@@ -92,6 +81,7 @@ export class GuestService {
 
     if (guest?.status === GuestStatus.CONFIRMED) {
       const payload = {
+        ...(inviteUrl && { inviteUrl }),
         id: guest.id,
         title: guest.title,
         type: guest.type,
@@ -103,22 +93,14 @@ export class GuestService {
         updatedAt: guest.updatedAt,
       };
 
-      const secret = process.env.QR_SECRET_KEY!;
-      const signature = crypto
-        .createHmac('sha256', secret)
-        .update(JSON.stringify(payload))
-        .digest('hex');
-
-      const qrData = { payload, signature };
-
-      const qrCode = await QRCode.toDataURL(JSON.stringify(qrData));
+      const qrCode = await QRCode.toDataURL(JSON.stringify(payload));
       return { ...guest, qrCode };
     }
 
     return guest;
   }
 
-  async respondToInvite({ id, confirmed }: RespondToInviteDTO) {
+  async respondToInvite({ id, confirmed, inviteUrl }: RespondToInviteDTO) {
     const guest = await this.guestRepo.findOneBy({ id });
 
     if (!guest) {
@@ -145,6 +127,7 @@ export class GuestService {
       return { message: 'Convite recusado com sucesso' };
 
     const payload = {
+      ...(inviteUrl && { inviteUrl }),
       id: guest.id,
       title: guest.title,
       type: guest.type,
@@ -156,15 +139,7 @@ export class GuestService {
       updatedAt: guest.updatedAt,
     };
 
-    const secret = process.env.QR_SECRET_KEY!;
-    const signature = crypto
-      .createHmac('sha256', secret)
-      .update(JSON.stringify(payload))
-      .digest('hex');
-
-    const qrData = { payload, signature };
-
-    const qrCode = await QRCode.toDataURL(JSON.stringify(qrData));
+    const qrCode = await QRCode.toDataURL(JSON.stringify(payload));
 
     return {
       message: 'Convite confirmado com sucesso',
