@@ -2,6 +2,7 @@ import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity
 import { AppDataSource } from '../database/data-source';
 import { GuestStatus, GuestEntity, GuestType } from '../entities/guest';
 import QRCode from 'qrcode';
+import crypto from 'crypto';
 
 interface CreateGuestDTO {
   names: string[];
@@ -18,6 +19,18 @@ interface RespondToInviteDTO {
 
 export class GuestService {
   private guestRepo = AppDataSource.getRepository(GuestEntity);
+
+  async validateInvite(payloadBase64: string, signature: string) {
+    const secret = process.env.QR_SECRET_KEY!;
+    const payload = Buffer.from(payloadBase64, 'base64url').toString('utf8');
+
+    const expectedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(payload)
+      .digest('hex');
+
+    return signature === expectedSignature;
+  }
 
   async createGuest(data: CreateGuestDTO) {
     const { names, title, status, cellphone } = data;
@@ -92,15 +105,28 @@ export class GuestService {
         updatedAt: guest.updatedAt,
       };
 
-      const payloadString = JSON.stringify(payload);
-      const payloadBase64 = Buffer.from(payloadString).toString('base64url');
-      const inviteUrl = `${inviteBaseUrl}?payload=${payloadBase64}`;
-
-      const qrCode = await QRCode.toDataURL(inviteUrl);
+      const qrCode = await this.generateQRCode(inviteBaseUrl, payload);
       return { ...guest, qrCode };
     }
 
     return guest;
+  }
+
+  private async generateQRCode(
+    inviteBaseUrl: string,
+    payload: any,
+  ): Promise<string> {
+    const payloadString = JSON.stringify(payload);
+    const payloadBase64 = Buffer.from(payloadString).toString('base64url');
+    const secret = process.env.QR_SECRET_KEY!;
+    const signature = crypto
+      .createHmac('sha256', secret)
+      .update(payloadString)
+      .digest('hex');
+    const inviteUrl = `${inviteBaseUrl}?payload=${payloadBase64}&sig=${signature}`;
+    const qrCode = await QRCode.toDataURL(inviteUrl);
+
+    return qrCode;
   }
 
   async respondToInvite({ id, confirmed, inviteBaseUrl }: RespondToInviteDTO) {
@@ -141,11 +167,7 @@ export class GuestService {
       updatedAt: guest.updatedAt,
     };
 
-    const payloadString = JSON.stringify(payload);
-    const payloadBase64 = Buffer.from(payloadString).toString('base64url');
-    const inviteUrl = `${inviteBaseUrl}?payload=${payloadBase64}`;
-
-    const qrCode = await QRCode.toDataURL(inviteUrl);
+    const qrCode = await this.generateQRCode(inviteBaseUrl, payload);
 
     return {
       message: 'Convite confirmado com sucesso',

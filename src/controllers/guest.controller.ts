@@ -162,4 +162,24 @@ router.post('/confirm-present/:id', async (req, res) => {
   }
 });
 
+router.post('/validate-invite', async (req, res) => {
+  const { payloadBase64, signature } = req.body;
+
+  if (!payloadBase64 || !signature) {
+    return res
+      .status(400)
+      .json({ error: 'Payload and signature are required' });
+  }
+
+  try {
+    const isValid = await guestService.validateInvite(payloadBase64, signature);
+    return res.json({ valid: isValid });
+  } catch (err: any) {
+    console.error(err);
+    return res
+      .status(500)
+      .json({ error: 'Erro ao validar convite', message: err.message });
+  }
+});
+
 export default router;
