@@ -20,14 +20,10 @@ interface RespondToInviteDTO {
 export class GuestService {
   private guestRepo = AppDataSource.getRepository(GuestEntity);
 
-  async validateInvite(payloadBase64: string, signature: string) {
+  async validateInvite(signature: string) {
     const secret = process.env.QR_SECRET_KEY!;
-    const payload = Buffer.from(payloadBase64, 'base64url').toString('utf8');
 
-    const expectedSignature = crypto
-      .createHmac('sha256', secret)
-      .update(payload)
-      .digest('hex');
+    const expectedSignature = crypto.createHmac('sha256', secret).digest('hex');
 
     return signature === expectedSignature;
   }
@@ -101,7 +97,9 @@ export class GuestService {
   }
 
   private async generateQRCode(inviteBaseUrl: string): Promise<string> {
-    const inviteUrl = `${inviteBaseUrl}`;
+    const secret = process.env.QR_SECRET_KEY!;
+    const signature = crypto.createHmac('sha256', secret).digest('hex');
+    const inviteUrl = `${inviteBaseUrl}?sig=${signature}`;
     const qrCode = await QRCode.toDataURL(inviteUrl);
 
     return qrCode;

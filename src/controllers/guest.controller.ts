@@ -163,16 +163,14 @@ router.post('/confirm-present/:id', async (req, res) => {
 });
 
 router.post('/validate-invite', async (req, res) => {
-  const { payloadBase64, signature } = req.body;
+  const { signature } = req.body;
 
-  if (!payloadBase64 || !signature) {
-    return res
-      .status(400)
-      .json({ error: 'Payload and signature are required' });
+  if (!signature) {
+    return res.status(400).json({ error: 'Signature is a required field' });
   }
 
   try {
-    const isValid = await guestService.validateInvite(payloadBase64, signature);
+    const isValid = await guestService.validateInvite(signature);
     return res.json({ valid: isValid });
   } catch (err: any) {
     console.error(err);
