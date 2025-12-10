@@ -93,37 +93,15 @@ export class GuestService {
     }
 
     if (guest?.status === GuestStatus.CONFIRMED) {
-      const payload = {
-        id: guest.id,
-        title: guest.title,
-        type: guest.type,
-        names: guest.names,
-        quantity: guest.quantity,
-        status: guest.status,
-        cellphone: guest.cellphone,
-        createdAt: guest.createdAt,
-        updatedAt: guest.updatedAt,
-      };
-
-      const qrCode = await this.generateQRCode(inviteBaseUrl, payload);
+      const qrCode = await this.generateQRCode(inviteBaseUrl);
       return { ...guest, qrCode };
     }
 
     return guest;
   }
 
-  private async generateQRCode(
-    inviteBaseUrl: string,
-    payload: any,
-  ): Promise<string> {
-    const payloadString = JSON.stringify(payload);
-    const payloadBase64 = Buffer.from(payloadString).toString('base64url');
-    const secret = process.env.QR_SECRET_KEY!;
-    const signature = crypto
-      .createHmac('sha256', secret)
-      .update(payloadString)
-      .digest('hex');
-    const inviteUrl = `${inviteBaseUrl}?payload=${payloadBase64}&sig=${signature}`;
+  private async generateQRCode(inviteBaseUrl: string): Promise<string> {
+    const inviteUrl = `${inviteBaseUrl}`;
     const qrCode = await QRCode.toDataURL(inviteUrl);
 
     return qrCode;
@@ -155,19 +133,7 @@ export class GuestService {
     if (confirmed === GuestStatus.DECLINED)
       return { message: 'Convite recusado com sucesso' };
 
-    const payload = {
-      id: guest.id,
-      title: guest.title,
-      type: guest.type,
-      names: guest.names,
-      quantity: guest.quantity,
-      status: guest.status,
-      cellphone: guest.cellphone,
-      createdAt: guest.createdAt,
-      updatedAt: guest.updatedAt,
-    };
-
-    const qrCode = await this.generateQRCode(inviteBaseUrl, payload);
+    const qrCode = await this.generateQRCode(inviteBaseUrl);
 
     return {
       message: 'Convite confirmado com sucesso',
