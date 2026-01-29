@@ -35,6 +35,9 @@ export class GuestEntity {
   @Column()
   quantity: number;
 
+  @Column()
+  tableNumber: number;
+
   @Column({ default: GuestStatus.PENDING })
   status: GuestStatus;
 
