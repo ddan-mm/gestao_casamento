@@ -38,6 +38,7 @@ export class GuestService {
       quantity: names.length,
       status: status || GuestStatus.PENDING,
       cellphone,
+      tableNumber: 0,
     });
 
     await this.guestRepo.save(guest);
